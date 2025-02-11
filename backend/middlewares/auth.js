@@ -1,6 +1,7 @@
 
 const zod = require("zod");
 const user = require("../models/user");
+
 const z = zod.object({
     email: zod.string().email(),
     password: zod.string().min(6)
@@ -29,4 +30,22 @@ const authMiddleware = async (req, res, next) => {
     }
 
 }
-module.exports = authMiddleware;
+
+const jwt = require("jsonwebtoken");
+const validateUser = (req, res, next) => {
+    const token = req.cookies.token || req.headers.authorization ;
+    if (!token) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+        const user = jwt.verify(token, process.env.key);
+        req.user = user;
+        next();
+    } catch (error) {
+        return res.status(401).json({ error: "Unauthorized" });
+    }
+}
+
+
+
+module.exports = { authMiddleware, validateUser };

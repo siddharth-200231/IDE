@@ -4,6 +4,8 @@ const cors = require('cors');
 
 app.use(cors());
 app.use(express.json());
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
 
 const http = require('http');
 const server = http.createServer(app);
