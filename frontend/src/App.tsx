@@ -5,6 +5,7 @@ import { CodeEditor } from './pages/Editor';
 import Signup from './pages/Signup';
 import SignIn from './pages/SignIn';
 import Home from './pages/Home';
+import Protected from './pages/Protected';
 
 function App() {
   return (
@@ -16,8 +17,16 @@ function App() {
         <Route path="/signin" element={<SignIn />} />
         <Route path='*' element={<Navigate to='/' />} />
         {/* Protected Routes */}
-        <Route path="/select-language" element={<LanguageSelection />} />
-        <Route path="/editor/:language" element={<CodeEditor />} />
+        <Route path="/select-language" element={
+          <Protected>
+            <LanguageSelection />
+          </Protected>
+        } />
+        <Route path="/editor/:language" element={
+          <Protected>
+            <CodeEditor />
+          </Protected>
+        } />
       </Routes>
     </BrowserRouter>
   );

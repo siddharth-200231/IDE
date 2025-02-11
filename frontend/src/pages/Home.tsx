@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Code2, ExternalLink } from "lucide-react";
 import { Button } from "../components/Button";
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) navigate("/select-language");
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black">

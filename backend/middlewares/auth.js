@@ -1,4 +1,3 @@
-
 const zod = require("zod");
 const user = require("../models/user");
 
@@ -33,19 +32,29 @@ const authMiddleware = async (req, res, next) => {
 
 const jwt = require("jsonwebtoken");
 const validateUser = (req, res, next) => {
-    const token = req.cookies.token || req.headers.authorization ;
-    if (!token) {
-        return res.status(401).json({ error: "Unauthorized" });
+    let token = req.cookies.token || req.headers.authorization;
+    
+    // Handle Bearer token
+    if (token && token.startsWith('Bearer ')) {
+        token = token.slice(7);
     }
-    try {
-        const user = jwt.verify(token, process.env.key);
-        req.user = user;
+
+    if (!token) {
+        console.log("No token found");
+        return res.status(401).json({ error: "Unauthorized - No token provided" });
+    }
+
+    try {  
+        const decoded = jwt.verify(token, process.env.key);
+        req.user = decoded;
         next();
     } catch (error) {
-        return res.status(401).json({ error: "Unauthorized" });
+        console.log("Token verification failed:", error.message);
+        return res.status(401).json({ 
+            error: "Unauthorized - Invalid token",
+            details: error.message 
+        });
     }
-}
-
-
+};
 
 module.exports = { authMiddleware, validateUser };

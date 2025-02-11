@@ -1,7 +1,8 @@
 'use client';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Code2, ArrowLeft, ChevronRight, Terminal } from 'lucide-react';
+import { Code2, ArrowLeft, ChevronRight, Terminal, LogOut } from 'lucide-react';
+import axios from 'axios';
 
 const languages = [
   {
@@ -30,6 +31,21 @@ const languages = [
 export const LanguageSelection: React.FC = () => {
   const navigate = useNavigate();
 
+  const handleLogout = async () => {
+    try {
+      await axios.get('http://localhost:3000/user/logout',{
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`  
+        }
+      });
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
+      navigate('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-black">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_14px]" />
@@ -44,6 +60,13 @@ export const LanguageSelection: React.FC = () => {
             <span className="text-sm font-medium">Back to Home</span>
           </button>
           <Terminal className="w-5 h-5 text-gray-500" />
+          <button
+            onClick={handleLogout}
+            className="text-gray-400 hover:text-cyan-500 transition-colors flex items-center gap-2"
+          >
+            <LogOut className="w-5 h-5" />
+            Logout
+          </button>
         </div>
       </nav>
 
