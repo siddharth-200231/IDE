@@ -4,8 +4,10 @@ import { Code2, ArrowLeft } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import axios from 'axios';
+import { useUser } from '../context/userContext';
 
 export const Signup: React.FC = () => {
+  const { setUser } = useUser();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -53,8 +55,16 @@ export const Signup: React.FC = () => {
       const response = await axios.post('http://localhost:3000/user/register', formData);
 
       if (response.data.token) {
+        // Set token
         localStorage.setItem('token', response.data.token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        
+        // Set user context
+        setUser({
+          name: response.data.user.name,
+          email: response.data.user.email
+        });
+
         navigate('/select-language');
       }
     } catch (error: any) {

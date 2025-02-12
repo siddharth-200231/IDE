@@ -46,4 +46,9 @@ router.get("/logout", validateUser, (req, res) => {
     return res.status(200).json({ message: "Logged out" });
 });
 
+router.get("/profile", validateUser, (req, res) => {
+    const { email, name } = req.user;
+    return res.status(200).json({ user: { email, name } });
+});
+
 module.exports = router;

@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Code2, ArrowLeft } from "lucide-react";
 import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import axios from "axios";
+import { useUser } from '../context/UserContext';
 
 export const SignIn: React.FC = () => {
+  const { user, setUser } = useUser();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -16,6 +18,11 @@ export const SignIn: React.FC = () => {
     email: "",
     password: "",
   });
+
+  // Debug initial context
+  useEffect(() => {
+    console.log('Current user context:', user);
+  }, [user]);
 
   const validateForm = () => {
     const newErrors = {
@@ -43,18 +50,40 @@ export const SignIn: React.FC = () => {
     setErrors({ email: "", password: "" });
 
     try {
+      console.log('Before API call - user context:', user);
+
       const response = await axios.post("http://localhost:3000/user/login", {
         email: formData.email,
         password: formData.password,
       });
 
+      console.log('API Response:', response.data);
+
       if (response.data.token) {
+        const userData = {
+          name: response.data.user.name,
+          email: response.data.user.email
+        };
+
+        console.log('Setting user data:', userData);
+        
         localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(userData));
+        
         axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
         
-        navigate("/select-language");
+        setUser(userData);
+        
+        console.log('After setUser - user context:', user);
+        
+        // Add delay to verify context update
+        setTimeout(() => {
+          console.log('Final check - user context:', user);
+          navigate("/select-language");
+        }, 100);
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       if (error.response) {
         const { status, data } = error.response;
 
