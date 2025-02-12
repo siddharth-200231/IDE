@@ -51,6 +51,7 @@ export const SignIn: React.FC = () => {
       if (response.data.token) {
         localStorage.setItem("token", response.data.token);
         axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
+        
         navigate("/select-language");
       }
     } catch (error: any) {
