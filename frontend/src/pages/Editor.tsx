@@ -6,6 +6,7 @@ import { Play, Download, Share2, Sun, Moon, Files, Home, Terminal, Loader2, Code
 import { Button } from '../components/Button';
 import { pythonLanguage, javaLanguage } from '../utils/languageConfigs';
 import { pythonConfig, javaConfig } from '../utils/editorConfigs';
+import { pythonCompletions, javaCompletions } from '../utils/languageCompletions';
 
 // Add default code for each language
 const defaultCode = {
@@ -39,13 +40,47 @@ export const CodeEditor: React.FC = () => {
 
   useEffect(() => {
     if (monaco) {
-      // Register Python
+      // Python Configuration
       monaco.languages.register({ id: 'python' });
       monaco.languages.setMonarchTokensProvider('python', pythonConfig);
+      monaco.languages.registerCompletionItemProvider('python', {
+        provideCompletionItems: () => ({
+          suggestions: [
+            ...pythonCompletions.keywords.map(keyword => ({
+              label: keyword,
+              kind: monaco.languages.CompletionItemKind.Keyword,
+              insertText: keyword
+            })),
+            ...pythonCompletions.builtins.map(builtin => ({
+              label: builtin,
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: builtin
+            })),
+            ...pythonCompletions.snippets
+          ]
+        })
+      });
 
-      // Register Java
+      // Java Configuration
       monaco.languages.register({ id: 'java' });
       monaco.languages.setMonarchTokensProvider('java', javaConfig);
+      monaco.languages.registerCompletionItemProvider('java', {
+        provideCompletionItems: () => ({
+          suggestions: [
+            ...javaCompletions.keywords.map(keyword => ({
+              label: keyword,
+              kind: monaco.languages.CompletionItemKind.Keyword,
+              insertText: keyword
+            })),
+            ...javaCompletions.builtins.map(builtin => ({
+              label: builtin,
+              kind: monaco.languages.CompletionItemKind.Function,
+              insertText: builtin
+            })),
+            ...javaCompletions.snippets
+          ]
+        })
+      });
     }
   }, [monaco]);
 
