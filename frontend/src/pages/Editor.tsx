@@ -134,40 +134,49 @@ export const CodeEditor: React.FC = () => {
         {/* Header/Navbar */}
         <nav className="sticky top-0 z-50 border-b border-gray-800/60 backdrop-blur-md bg-gray-900/50">
           <div className="px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Code2 className="w-5 h-5 text-cyan-400" />
-              <div className="relative z-[60]"> {/* Increased z-index */}
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700/50 hover:bg-gray-700/50 transition-all"
-                >
-                  <span className="text-sm font-medium text-gray-200">{selectedLanguage.name}</span>
-                  <ChevronDown 
-                    className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                      isDropdownOpen ? 'transform rotate-180' : ''
-                    }`} 
-                  />
-                </button>
-
-                {isDropdownOpen && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-40"
-                      onClick={() => setIsDropdownOpen(false)}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => navigate('/select-language')}
+                className="flex items-center gap-2 px-3 py-1.5 text-gray-400 hover:text-cyan-400 transition-colors"
+              >
+                <Home className="w-5 h-5" />
+                <span className="text-sm">Home</span>
+              </button>
+              <div className="flex items-center gap-3">
+                <Code2 className="w-5 h-5 text-cyan-400" />
+                <div className="relative z-[60]"> {/* Increased z-index */}
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700/50 hover:bg-gray-700/50 transition-all"
+                  >
+                    <span className="text-sm font-medium text-gray-200">{selectedLanguage.name}</span>
+                    <ChevronDown 
+                      className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                        isDropdownOpen ? 'transform rotate-180' : ''
+                      }`} 
                     />
-                    <div className="absolute top-full left-0 mt-2 w-48 rounded-lg bg-gray-800 border border-gray-700/50 shadow-xl z-50">
-                      {languages.map((lang) => (
-                        <button
-                          key={lang.id}
-                          onClick={() => handleLanguageChange(lang)}
-                          className="flex items-center w-full px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg transition-colors"
-                        >
-                          {lang.name}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
+                  </button>
+
+                  {isDropdownOpen && (
+                    <>
+                      <div 
+                        className="fixed inset-0 z-40"
+                        onClick={() => setIsDropdownOpen(false)}
+                      />
+                      <div className="absolute top-full left-0 mt-2 w-48 rounded-lg bg-gray-800 border border-gray-700/50 shadow-xl z-50">
+                        {languages.map((lang) => (
+                          <button
+                            key={lang.id}
+                            onClick={() => handleLanguageChange(lang)}
+                            className="flex items-center w-full px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg transition-colors"
+                          >
+                            {lang.name}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-2">

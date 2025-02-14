@@ -11,6 +11,7 @@ require('dotenv').config();
 const app = express();
 app.use(cookieParser());
 app.use(cors());
+app.use(express.json());
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -102,6 +103,6 @@ io.on('connection', (socket) => {
 });
 
 // Start server
-server.listen(process.env.PORT || 3000, () => {
+server.listen( 3000, () => {
   console.log(`Server is running on port ${process.env.PORT || 3000}`);
 });

@@ -13,6 +13,7 @@ router.post("/register", async (req, res) => {
     try {
         const validatedData = userSchema.parse(req.body);
         const { email, name, password } = validatedData;
+        console.log(email, name, password);
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
