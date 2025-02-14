@@ -7,6 +7,7 @@ import { Button } from '../components/Button';
 import { pythonLanguage, javaLanguage } from '../utils/languageConfigs';
 import { pythonConfig, javaConfig } from '../utils/editorConfigs';
 import { pythonCompletions, javaCompletions } from '../utils/languageCompletions';
+import { io } from 'socket.io-client';
 
 // Add default code for each language
 const defaultCode = {
@@ -20,6 +21,8 @@ const languages = [
   { id: 'python', name: 'Python' },
   { id: 'java', name: 'Java' }
 ];
+
+const socket = io('http://localhost:3000');
 
 export const CodeEditor: React.FC = () => {
   const { language } = useParams<{ language: string }>();
@@ -84,15 +87,44 @@ export const CodeEditor: React.FC = () => {
     }
   }, [monaco]);
 
+  // Handle code execution
   const handleRunCode = () => {
     setIsRunning(true);
-    setOutput('Running code...');
-    // Simulate code execution
-    setTimeout(() => {
-      setOutput('Hello, World!\nProgram completed successfully.');
-      setIsRunning(false);
-    }, 1500);
+    setOutput('');
+    
+    socket.emit('execute_code', {
+      language: selectedLanguage.id,
+      code
+    });
   };
+
+  // Socket event listeners
+  useEffect(() => {
+    socket.on('execution_status', (status) => {
+      setOutput(prev => `${prev}${status}\n`);
+    });
+
+    socket.on('code_output', (output) => {
+      setOutput(prev => `${prev}${output}`);
+    });
+
+    socket.on('execution_error', (error) => {
+      setOutput(prev => `${prev}\nError: ${error}`);
+      setIsRunning(false);
+    });
+
+    socket.on('execution_complete', () => {
+      setIsRunning(false);
+    });
+
+    // Cleanup socket listeners
+    return () => {
+      socket.off('execution_status');
+      socket.off('code_output');
+      socket.off('execution_error');
+      socket.off('execution_complete');
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-gray-900 to-black">
