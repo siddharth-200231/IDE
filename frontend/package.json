@@ -15,11 +15,13 @@
     "@mui/icons-material": "^6.4.4",
     "@mui/material": "^6.4.4",
     "axios": "^1.7.9",
+    "framer-motion": "^12.4.3",
     "lucide-react": "^0.344.0",
     "monaco-editor": "^0.52.2",
     "monaco-editor-webpack-plugin": "^7.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.5.1",
     "react-router-dom": "^6.22.2",
     "socket.io-client": "^4.8.1"
   },

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Code2, ArrowLeft } from "lucide-react";
+import { Code2, ArrowLeft, Mail, Lock } from "lucide-react";
 import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import axios from "axios";
@@ -134,74 +134,94 @@ export const SignIn: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-950 to-black">
-      {/* Background Grid Pattern */}
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-slate-900 to-black">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 animate-gradient" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_14px]" />
+
+      {/* Floating orbs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
 
       <div className="relative min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          {/* Logo Section */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-gray-800/30 p-3 rounded-xl border border-gray-700/50">
-              <Code2 className="w-8 h-8 text-cyan-500" />
-            </div>
-          </div>
-
-          {/* Form Card */}
-          <div className="bg-gray-800/20 backdrop-blur-lg rounded-lg border border-gray-700/50 p-8">
-            <div className="flex items-center mb-6">
-              <button
-                onClick={() => navigate("/")}
-                className="text-gray-400 hover:text-cyan-500 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h2 className="text-xl font-medium text-gray-200 text-center flex-1 mr-5">
-                Welcome back
-              </h2>
+          {/* Logo + Card Container */}
+          <div className="space-y-6">
+            {/* Floating Logo */}
+            <div className="flex justify-center">
+              <div className="p-3 bg-gradient-to-br from-gray-800/80 to-gray-900/80 rounded-2xl border border-gray-700/50 shadow-xl backdrop-blur-xl animate-float">
+                <Code2 className="w-10 h-10 text-cyan-400" />
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <Input
-                type="email"
-                placeholder="Email address"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                error={errors.email}
-                className="w-full bg-gray-900/50 border-gray-700 text-gray-200 placeholder-gray-500 focus:border-cyan-500"
-              />
+            {/* Main Card */}
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl">
+              {/* Header */}
+              <div className="px-8 pt-6 pb-4 border-b border-gray-700/50">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => navigate("/")}
+                    className="p-2 hover:bg-gray-800/50 rounded-lg transition-colors group"
+                  >
+                    <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-cyan-400" />
+                  </button>
+                  <h2 className="text-xl font-semibold bg-gradient-to-r from-gray-100 to-gray-300 bg-clip-text text-transparent">
+                    Welcome back
+                  </h2>
+                </div>
+              </div>
 
-              <Input
-                type="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-                error={errors.password}
-                className="w-full bg-gray-900/50 border-gray-700 text-gray-200 placeholder-gray-500 focus:border-cyan-500"
-              />
+              {/* Form */}
+              <div className="p-8">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                      <Input
+                        type="email"
+                        placeholder="Email address"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        error={errors.email}
+                        className="w-full pl-11 bg-gray-900/50 border-gray-700/50 text-gray-200 placeholder-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 transition-all duration-200"
+                      />
+                    </div>
 
-              <Button
-                type="submit"
-                className="w-full bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-medium transition-colors"
-                disabled={isLoading}
-              >
-                {isLoading ? "Signing in..." : "Sign in"}
-              </Button>
-            </form>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                      <Input
+                        type="password"
+                        placeholder="Password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        error={errors.password}
+                        className="w-full pl-11 bg-gray-900/50 border-gray-700/50 text-gray-200 placeholder-gray-500 focus:border-cyan-500/50 focus:ring-cyan-500/20 transition-all duration-200"
+                      />
+                    </div>
+                  </div>
 
-            <p className="mt-6 text-center text-sm text-gray-400">
-              Don't have an account?{" "}
-              <button
-                onClick={() => navigate("/signup")}
-                className="text-cyan-500 hover:text-cyan-400 font-medium transition-colors"
-              >
-                Sign up
-              </button>
-            </p>
+                  <Button
+                    type="submit"
+                    className={`w-full py-2.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-gray-900 font-medium rounded-xl shadow-lg shadow-cyan-500/20 transition-all duration-300 ${
+                      isLoading ? 'opacity-80 cursor-not-allowed' : ''
+                    }`}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Signing in..." : "Sign in"}
+                  </Button>
+                </form>
+
+                <p className="mt-8 text-center text-sm text-gray-400">
+                  Don't have an account?{" "}
+                  <button
+                    onClick={() => navigate("/signup")}
+                    className="font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
+                    Create one now
+                  </button>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
