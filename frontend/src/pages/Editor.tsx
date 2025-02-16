@@ -16,6 +16,8 @@ import {
   ChevronDown,
   XCircle,
   CheckCircle2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { Button } from "../components/Button";
 import { pythonLanguage, javaLanguage } from "../utils/languageConfigs";
@@ -70,6 +72,7 @@ export const CodeEditor: React.FC = () => {
   const [output, setOutput] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [code, setCode] = useState(defaultCode[selectedLanguage.id]);
+  const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
     if (monaco) {
@@ -149,6 +152,16 @@ export const CodeEditor: React.FC = () => {
       socket.off("execution_complete");
     };
   }, []);
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy code:', err);
+    }
+  };
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
@@ -239,7 +252,7 @@ export const CodeEditor: React.FC = () => {
           {/* Main Editor Layout */}
           <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
             {/* Editor Panel */}
-            <div className="flex-1 flex flex-col rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+            <div className="flex-1 flex flex-col rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden relative">
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
@@ -250,6 +263,17 @@ export const CodeEditor: React.FC = () => {
                   {selectedLanguage.name}
                 </span>
               </div>
+              <button
+                onClick={handleCopyCode}
+                className="absolute top-2 right-2 p-2 rounded-md bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors z-10"
+                title="Copy code"
+              >
+                {isCopied ? (
+                  <Check className="w-4 h-4 text-green-500" />
+                ) : (
+                  <Copy className="w-4 h-4 text-gray-500" />
+                )}
+              </button>
               <div className="flex-1 overflow-hidden">
                 <Editor
                   height="100%"
