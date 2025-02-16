@@ -42,18 +42,35 @@ const socket = io("http://localhost:3000");
 export const CodeEditor: React.FC = () => {
   const { language } = useParams<{ language: string }>();
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [isRunning, setIsRunning] = useState(false);
-  const [output, setOutput] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [code, setCode] = useState(defaultCode[selectedLanguage.id]);
+  
+  // 2. Find the matching language from URL parameter
+  const [selectedLanguage, setSelectedLanguage] = useState(() => {
+    const initialLang = languages.find(lang => lang.id === language);
+    return initialLang || languages[0];
+  });
 
+  // 3. Update code when language changes from URL
+  useEffect(() => {
+    const currentLang = languages.find(lang => lang.id === language);
+    if (currentLang) {
+      setSelectedLanguage(currentLang);
+      setCode(defaultCode[currentLang.id]);
+    }
+  }, [language]);
+
+  // 4. Update URL when language changes from dropdown
   const handleLanguageChange = (lang: (typeof languages)[0]) => {
     setSelectedLanguage(lang);
     setCode(defaultCode[lang.id]);
     setIsDropdownOpen(false);
+    navigate(`/editor/${lang.id}`);
   };
+
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isRunning, setIsRunning] = useState(false);
+  const [output, setOutput] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [code, setCode] = useState(defaultCode[selectedLanguage.id]);
 
   useEffect(() => {
     if (monaco) {
