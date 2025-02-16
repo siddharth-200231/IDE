@@ -14,6 +14,8 @@ import {
   Loader2,
   Code2,
   ChevronDown,
+  XCircle,
+  CheckCircle2,
 } from "lucide-react";
 import { Button } from "../components/Button";
 import { pythonLanguage, javaLanguage } from "../utils/languageConfigs";
@@ -150,70 +152,62 @@ export const CodeEditor: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
-      <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:24px_24px] dark:opacity-10" />
-
-        <div className="relative h-[100dvh] flex flex-col">
-          {/* Enhanced Navbar */}
-          <nav className="sticky top-0 z-50 border-b border-cyan-500/20 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80">
-            <div className="px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2 sm:gap-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="relative h-screen flex flex-col">
+          {/* Enhanced Glassmorphic Navbar */}
+          <nav className="sticky top-0 z-50 border-b border-gray-200/50 dark:border-gray-700 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80">
+            <div className="px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-4">
                 <button
                   onClick={() => navigate("/select-language")}
-                  className="flex items-center gap-1 sm:gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-cyan-500/10 dark:bg-gray-800/50 transition-all group"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm transition-all"
                 >
-                  <Home className="w-5 h-5 text-cyan-500 dark:text-cyan-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-300" />
-                  <span className="hidden sm:inline text-sm font-medium text-cyan-600 dark:text-cyan-400">
+                  <Home className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                     Home
                   </span>
                 </button>
 
-                <div className="relative z-50">
+                <div className="relative">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gray-100 border border-cyan-500/20 hover:border-cyan-400/40 dark:bg-gray-800/70 transition-all"
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm transition-all"
                   >
-                    <Code2 className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />
+                    <Code2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
                       {selectedLanguage.name}
                     </span>
                     <ChevronDown
-                      className={`w-4 h-4 text-cyan-500 dark:text-cyan-400 transition-transform duration-200 ${
+                      className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${
                         isDropdownOpen ? "rotate-180" : ""
                       }`}
                     />
                   </button>
 
                   {isDropdownOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setIsDropdownOpen(false)}
-                      />
-                      <div className="absolute top-full left-0 mt-2 w-48 rounded-xl bg-white border border-gray-200 shadow-2xl dark:bg-gray-800 dark:border-cyan-500/20 z-50 overflow-hidden">
-                        {languages.map((lang) => (
-                          <button
-                            key={lang.id}
-                            onClick={() => handleLanguageChange(lang)}
-                            className={`flex items-center w-full px-4 py-3 text-sm font-medium ${
-                              lang.id === selectedLanguage.id
-                                ? "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-400"
-                                : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-cyan-500/5"
-                            } transition-colors`}
-                          >
-                            {lang.name}
-                          </button>
-                        ))}
-                      </div>
-                    </>
+                    <div className="absolute top-full left-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
+                      {languages.map((lang) => (
+                        <button
+                          key={lang.id}
+                          onClick={() => handleLanguageChange(lang)}
+                          className={`flex items-center w-full px-4 py-3 text-sm font-medium ${
+                            lang.id === selectedLanguage.id
+                              ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400"
+                              : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+                          } transition-colors`}
+                        >
+                          {lang.name}
+                        </button>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex items-center gap-3">
                 <Button
                   onClick={() => setIsDarkMode(!isDarkMode)}
-                  className="p-2 rounded-lg bg-gray-100 hover:bg-cyan-500/10 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300"
+                  className="p-2.5 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm text-gray-600 dark:text-gray-300"
                 >
                   {isDarkMode ? (
                     <Sun className="w-5 h-5" />
@@ -224,17 +218,17 @@ export const CodeEditor: React.FC = () => {
                 <Button
                   onClick={handleRunCode}
                   isLoading={isRunning}
-                  className="bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white px-4 sm:px-5 py-2 rounded-xl font-semibold shadow-lg shadow-cyan-500/20 transition-all"
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2"
                 >
                   {isRunning ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      <span className="hidden sm:inline">Running...</span>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Running</span>
                     </>
                   ) : (
                     <>
-                      <Play className="w-4 h-4 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">Run Code</span>
+                      <Play className="w-4 h-4 fill-current" />
+                      <span>Run Code</span>
                     </>
                   )}
                 </Button>
@@ -242,83 +236,110 @@ export const CodeEditor: React.FC = () => {
             </div>
           </nav>
 
-          {/* Main Editor Area */}
-          <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 h-[calc(100dvh-76px)] overflow-hidden">
+          {/* Main Editor Layout */}
+          <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
             {/* Editor Panel */}
-            <div className="flex-1 min-h-[50vh] lg:min-h-0 rounded-xl border border-gray-200 dark:border-cyan-500/20 bg-white dark:bg-gray-900/50 overflow-hidden shadow-sm">
-              <Editor
-                height="100%"
-                language={selectedLanguage.id}
-                value={code}
-                onChange={(value) => setCode(value || "")}
-                theme={isDarkMode ? "vs-dark" : "light"}
-                options={{
-                  fontSize: 14,
-                  fontFamily: "JetBrains Mono, monospace",
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  padding: { top: 16 },
-                  smoothScrolling: true,
-                  cursorSmoothCaretAnimation: true,
-                  suggestOnTriggerCharacters: true,
-                  acceptSuggestionOnEnter: "on",
-                  quickSuggestions: true,
-                  snippetSuggestions: "top",
-                  lineNumbersMinChars: 3,
-                  glyphMargin: false,
-                  folding: true,
-                  lineDecorationsWidth: 10,
-                  renderLineHighlight: "all",
-                  scrollbar: {
-                    vertical: "hidden",
-                    horizontal: "hidden",
-                    handleMouseWheel: true,
-                  },
-                }}
-                onMount={(editor) => {
-                  editor.focus();
-                  if (selectedLanguage.id === "python") {
-                    monaco.languages.setLanguageConfiguration(
-                      "python",
-                      pythonConfig
-                    );
-                  } else if (selectedLanguage.id === "java") {
-                    monaco.languages.setLanguageConfiguration("java", javaConfig);
-                  }
-                }}
-              />
+            <div className="flex-1 flex flex-col rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                </div>
+                <span className="text-sm font-mono text-gray-500 dark:text-gray-400">
+                  {selectedLanguage.name}
+                </span>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <Editor
+                  height="100%"
+                  language={selectedLanguage.id}
+                  value={code}
+                  onChange={(value) => setCode(value || "")}
+                  theme={isDarkMode ? "vs-dark" : "light"}
+                  options={{
+                    fontSize: 14,
+                    fontFamily: "JetBrains Mono, monospace",
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    padding: { top: 16 },
+                    smoothScrolling: true,
+                    cursorSmoothCaretAnimation: true,
+                    automaticLayout: true,
+                    suggestOnTriggerCharacters: true,
+                    acceptSuggestionOnEnter: "on",
+                    quickSuggestions: true,
+                    snippetSuggestions: "top",
+                    lineNumbersMinChars: 3,
+                    glyphMargin: false,
+                    folding: true,
+                    lineDecorationsWidth: 10,
+                    renderLineHighlight: "all",
+                    scrollbar: {
+                      vertical: "hidden",
+                      horizontal: "hidden",
+                      handleMouseWheel: true,
+                    },
+                  }}
+                  onMount={(editor) => {
+                    editor.focus();
+                    if (selectedLanguage.id === "python") {
+                      monaco.languages.setLanguageConfiguration(
+                        "python",
+                        pythonConfig
+                      );
+                    } else if (selectedLanguage.id === "java") {
+                      monaco.languages.setLanguageConfiguration("java", javaConfig);
+                    }
+                  }}
+                />
+              </div>
             </div>
 
             {/* Console Output */}
-            <div className="flex-none lg:w-[400px] h-[40vh] lg:h-auto rounded-xl border border-gray-200 dark:border-cyan-500/20 bg-white dark:bg-gray-900/50 shadow-sm overflow-hidden">
-              <div className="h-full flex flex-col">
-                <div className="border-b border-gray-200 dark:border-cyan-500/20 px-4 sm:px-6 py-3 bg-gray-50 dark:bg-gray-900/50">
-                  <h3 className="text-sm font-semibold text-cyan-600 dark:text-cyan-400 flex items-center gap-2">
-                    <Terminal className="w-4 h-4" />
-                    Console Output
-                  </h3>
+            <div className="lg:w-[420px] flex flex-col rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                  <Terminal className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  Console Output
+                </h3>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setOutput("")}
+                    className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <XCircle className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                  </button>
                 </div>
-                <div className="flex-1 overflow-auto p-4 font-mono text-sm bg-white dark:bg-gray-900/30">
-                  {output ? (
-                    <pre className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
-                      {output.split("\n").map((line, i) => {
-                        const isError = line.includes("Error:");
-                        return (
+              </div>
+              <div className="flex-1 overflow-auto p-4 font-mono text-sm bg-gray-50/50 dark:bg-gray-900/20">
+                {output ? (
+                  <pre className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
+                    {output.split("\n").map((line, i) => {
+                      const isError = line.includes("Error:");
+                      return (
+                        <div key={i} className="flex items-start gap-2">
+                          {isRunning ? (
+                            <Loader2 className="w-4 h-4 mt-1 flex-shrink-0 animate-spin text-gray-400" />
+                          ) : isError ? (
+                            <XCircle className="w-4 h-4 mt-1 flex-shrink-0 text-red-500" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4 mt-1 flex-shrink-0 text-green-500" />
+                          )}
                           <code
-                            key={i}
-                            className={`block ${isError ? "text-red-500 dark:text-red-400" : ""}`}
+                            className={`flex-1 ${isError ? "text-red-500 dark:text-red-400" : ""}`}
                           >
                             {line}
                           </code>
-                        );
-                      })}
-                    </pre>
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
-                      Click "Run Code" to see the output here
-                    </div>
-                  )}
-                </div>
+                        </div>
+                      );
+                    })}
+                  </pre>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
+                    Your program output will appear here...
+                  </div>
+                )}
               </div>
             </div>
           </div>
