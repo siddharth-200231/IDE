@@ -27,7 +27,7 @@ const Protected: React.FC<ProtectedProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/signin" replace />;
   }
 
   return <>{children}</>;
