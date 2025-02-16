@@ -5,6 +5,7 @@ import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import axios from "axios";
 import { useUser } from '../context/UserContext';
+import { BASE_URL , API_ENDPOINTS } from "../api";
 
 export const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ export const Signup: React.FC = () => {
     setErrors({ name: "", email: "", password: "" });
 
     try {
-      const response = await axios.post("http://localhost:3000/user/register", formData);
+      const response = await axios.post(`${BASE_URL}${API_ENDPOINTS.AUTH.REGISTER}`, formData);
 
       if (response.data.token) {
         const userData = {

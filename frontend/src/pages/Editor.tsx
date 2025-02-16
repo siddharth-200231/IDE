@@ -27,6 +27,7 @@ import {
   javaCompletions,
 } from "../utils/languageCompletions";
 import { io } from "socket.io-client";
+import { BASE_URL , API_ENDPOINTS } from "../api";
 
 const defaultCode = {
   javascript:
@@ -41,7 +42,7 @@ const languages = [
   { id: "java", name: "Java" },
 ];
 
-const socket = io("http://localhost:3000");
+const socket = io(BASE_URL);
 
 export const CodeEditor: React.FC = () => {
   const { language } = useParams<{ language: string }>();

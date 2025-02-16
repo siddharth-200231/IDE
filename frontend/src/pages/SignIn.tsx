@@ -5,6 +5,7 @@ import { Button } from "../components/Button";
 import { Input } from "../components/Input";
 import axios from "axios";
 import { useUser } from '../context/UserContext';
+import { BASE_URL , API_ENDPOINTS } from "../api";
 
 export const SignIn: React.FC = () => {
   const { user, setUser } = useUser();
@@ -52,7 +53,7 @@ export const SignIn: React.FC = () => {
     try {
       console.log('Before API call - user context:', user);
 
-      const response = await axios.post("http://localhost:3000/user/login", {
+      const response = await axios.post(`${BASE_URL}${API_ENDPOINTS.AUTH.LOGIN}`, {
         email: formData.email,
         password: formData.password,
       });
