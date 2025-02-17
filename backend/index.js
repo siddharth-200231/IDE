@@ -42,7 +42,7 @@ const executeCode = async (language, code, socket) => {
     let command;
     switch (language) {
       case 'python':
-        command = `python ${filePath}`;
+        command = `python3 ${filePath}`;
         break;
       case 'java':
         const javaFilePath = path.join(tempDir, 'Main.java');
