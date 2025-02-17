@@ -7,7 +7,7 @@ import { useUser } from '../context/userContext';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 // ...or if using Material-UI
 // import ChevronRight from '@mui/icons-material/ChevronRight';
-
+import { BASE_URL, API_ENDPOINTS } from '../api';
 const languages = [
   {
     id: 'javascript',
@@ -46,7 +46,7 @@ export const LanguageSelection: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/user/profile', {
+        const response = await axios.get(`${BASE_URL}${API_ENDPOINTS.AUTH.PROFILE}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -64,7 +64,7 @@ export const LanguageSelection: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.get('http://localhost:3000/user/logout', {
+      await axios.get(`${BASE_URL}${API_ENDPOINTS.AUTH.LOGOUT}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
