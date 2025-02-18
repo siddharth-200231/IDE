@@ -27,7 +27,7 @@ import {
   javaCompletions,
 } from "../utils/languageCompletions";
 import { io } from "socket.io-client";
-import { BASE_URL , API_ENDPOINTS } from "../api";
+import { BASE_URL, API_ENDPOINTS } from "../api";
 
 const defaultCode = {
   javascript:
@@ -47,14 +47,14 @@ const socket = io(BASE_URL);
 export const CodeEditor: React.FC = () => {
   const { language } = useParams<{ language: string }>();
   const navigate = useNavigate();
-  
+
   const [selectedLanguage, setSelectedLanguage] = useState(() => {
-    const initialLang = languages.find(lang => lang.id === language);
+    const initialLang = languages.find((lang) => lang.id === language);
     return initialLang || languages[0];
   });
 
   useEffect(() => {
-    const currentLang = languages.find(lang => lang.id === language);
+    const currentLang = languages.find((lang) => lang.id === language);
     if (currentLang) {
       setSelectedLanguage(currentLang);
       setCode(defaultCode[currentLang.id]);
@@ -160,24 +160,25 @@ export const CodeEditor: React.FC = () => {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy code:', err);
+      console.error("Failed to copy code:", err);
     }
   };
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'dark' : ''}`}>
+    <div className={`min-h-screen ${isDarkMode ? "dark" : ""}`}>
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
         <div className="relative h-screen flex flex-col">
-          {/* Enhanced Glassmorphic Navbar */}
+          {/* Responsive Navbar */}
           <nav className="sticky top-0 z-50 border-b border-gray-200/50 dark:border-gray-700 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80">
-            <div className="px-6 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="px-4 md:px-6 py-3 flex items-center justify-between gap-4">
+              {/* Left Side Controls */}
+              <div className="flex items-center gap-2 flex-1">
                 <button
                   onClick={() => navigate("/select-language")}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm transition-all"
+                  className="flex items-center gap-2 p-2 md:px-4 md:py-2.5 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm transition-all"
                 >
                   <Home className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                  <span className="hidden md:inline text-sm font-medium text-gray-700 dark:text-gray-200">
                     Home
                   </span>
                 </button>
@@ -185,19 +186,14 @@ export const CodeEditor: React.FC = () => {
                 <div className="relative">
                   <button
                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm transition-all"
+                    className="flex items-center gap-2 p-2 md:px-4 md:py-2.5 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm transition-all"
                   >
                     <Code2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    <span className="hidden sm:inline text-sm font-semibold text-gray-700 dark:text-gray-200">
                       {selectedLanguage.name}
                     </span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${
-                        isDropdownOpen ? "rotate-180" : ""
-                      }`}
-                    />
+                    <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </button>
-
                   {isDropdownOpen && (
                     <div className="absolute top-full left-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
                       {languages.map((lang) => (
@@ -218,10 +214,12 @@ export const CodeEditor: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              {/* Right Side Controls */}
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <Button
                   onClick={() => setIsDarkMode(!isDarkMode)}
-                  className="p-2.5 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm text-gray-600 dark:text-gray-300"
+                  className="p-2 rounded-xl bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm text-gray-600 dark:text-gray-300"
+                  aria-label="Toggle theme"
                 >
                   {isDarkMode ? (
                     <Sun className="w-5 h-5" />
@@ -229,31 +227,27 @@ export const CodeEditor: React.FC = () => {
                     <Moon className="w-5 h-5" />
                   )}
                 </Button>
+
                 <Button
                   onClick={handleRunCode}
                   isLoading={isRunning}
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white px-6 py-2.5 rounded-xl font-semibold shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2"
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white p-2 md:px-6 md:py-2.5 rounded-xl font-semibold shadow-lg shadow-indigo-500/20 transition-all flex items-center gap-2"
                 >
                   {isRunning ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Running</span>
-                    </>
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <>
-                      <Play className="w-4 h-4 fill-current" />
-                      <span>Run Code</span>
-                    </>
+                    <Play className="w-4 h-4 fill-current" />
                   )}
+                  <span className="hidden md:inline">Run Code</span>
                 </Button>
               </div>
             </div>
           </nav>
 
           {/* Main Editor Layout */}
-          <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
+          <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-hidden">
             {/* Editor Panel */}
-            <div className="flex-1 flex flex-col rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden relative">
+            <div className="flex-1 flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden relative min-h-[400px] lg:min-h-0">
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
@@ -322,14 +316,14 @@ export const CodeEditor: React.FC = () => {
             </div>
 
             {/* Console Output */}
-            <div className="lg:w-[420px] flex flex-col rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden">
+            <div className="lg:w-[400px] flex flex-col rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm overflow-hidden h-[300px] lg:h-auto">
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
                   <Terminal className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                   Console Output
                 </h3>
                 <div className="flex items-center gap-2">
-                  <button 
+                  <button
                     onClick={() => setOutput("")}
                     className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
