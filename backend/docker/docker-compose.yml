@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  javascript:
+    build:
+      context: ./javascript
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"  # adjust as needed
+  python:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"  # adjust as needed
+  java:
+    build:
+      context: ./java
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"  # adjust as needed
