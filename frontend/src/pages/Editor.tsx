@@ -28,6 +28,7 @@ import {
 } from "../utils/languageCompletions";
 import { io } from "socket.io-client";
 import { BASE_URL , API_ENDPOINTS } from "../api";
+import { Chatbot } from "../components/Chatbot";
 
 const defaultCode = {
   javascript:
@@ -368,6 +369,9 @@ export const CodeEditor: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Chatbot Component */}
+          <Chatbot />
         </div>
       </div>
     </div>
