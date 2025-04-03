@@ -96,6 +96,8 @@ export const CodeEditor: React.FC = () => {
   const [codePrompt, setCodePrompt] = useState("");
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [editorRef, setEditorRef] = useState<any>(null);
+  const [replaceAllCode, setReplaceAllCode] = useState(false);
+  const [generationMode, setGenerationMode] = useState<'generate' | 'explain'>('generate');
 
   useEffect(() => {
     if (monaco) {
@@ -147,7 +149,7 @@ export const CodeEditor: React.FC = () => {
       
       setIsLoadingFile(true);
       setIsFileLoaded(false);
-      
+
       try {
         const response = await axios.get(`${BASE_URL}/files/${encodeURIComponent(fileId)}`, {
           headers: {
@@ -202,6 +204,7 @@ export const CodeEditor: React.FC = () => {
 
     setIsSaving(true);
     try {
+      // Use the existing fileName if available, otherwise create a new filename
       const name =
         fileName ||
         `untitled-${Date.now()}.${
@@ -212,13 +215,19 @@ export const CodeEditor: React.FC = () => {
             : "java"
         }`;
 
+      console.log("Saving file:", {
+        fileName: name,
+        fileId: searchParams.get("file"),
+        existingFile: !!searchParams.get("file")
+      });
+
       const response = await axios.post(
         `${BASE_URL}/files/save`,
         {
-          content: code, // The current code in editor
-          filename: name,
+          content: code,
+          filename: name, 
           language: selectedLanguage.id,
-          fileId: searchParams.get("file"), // Use searchParams directly to get fileId
+          fileId: fileId, // Use the fileId from state instead of getting it directly from searchParams
         },
         {
           headers: {
@@ -228,12 +237,17 @@ export const CodeEditor: React.FC = () => {
         }
       );
 
-      // Set filename and fileId after successful save
+      // Set the filename after successful save
       setFileName(name);
-      if (!searchParams.get("file") && response.data.fileId) {
-        navigate(`/editor/${selectedLanguage.id}?file=${response.data.fileId}`);
+      
+      // Only update the URL if we're creating a new file (not updating an existing one)
+      if (!fileId && response.data.fileId) {
+        // Store the new fileId in our state too 
+        const newFileId = response.data.fileId;
+        navigate(`/editor/${selectedLanguage.id}?file=${newFileId}`);
       }
 
+      // Refresh the file list
       const filesResponse = await axios.get(`${BASE_URL}${API_ENDPOINTS.FILES.LIST}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -307,6 +321,9 @@ export const CodeEditor: React.FC = () => {
       // Get the API key from the Chatbot component
       const API_KEY = "AIzaSyClNi8sXsBRlg7uJx6qXV5mOJ-bfWjHZvA";
       
+      // Always get the current code to include in the prompt
+      const currentCode = code.trim();
+      
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
         method: "POST",
         headers: {
@@ -315,7 +332,25 @@ export const CodeEditor: React.FC = () => {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Generate ${selectedLanguage.name} code for the following task. Only provide the code without explanations or markdown formatting:\n\n${codePrompt}`
+              text: `You are an expert ${selectedLanguage.name} programmer. Generate complete, well-structured ${selectedLanguage.name} code for the following task.
+
+Context: This is for a code learning platform where users write and run code in JavaScript, Python, and Java.
+
+CURRENT CODE IN EDITOR:
+\`\`\`${selectedLanguage.id}
+${currentCode}
+\`\`\`
+
+TASK: ${codePrompt}
+
+Important instructions:
+- Generate a complete, executable ${selectedLanguage.name} solution
+- The code should follow best practices for ${selectedLanguage.name}
+- Include proper error handling where appropriate
+- Your response will COMPLETELY REPLACE the current code in the editor
+- Provide ONLY the code without any explanations, comments (unless they're part of the code), or markdown formatting
+- Make sure the code is immediately runnable in our platform
+- The code should handle the specific task described while preserving the general intent of the original code if appropriate`
             }]
           }],
           generationConfig: {
@@ -326,7 +361,10 @@ export const CodeEditor: React.FC = () => {
         }),
       });
       
-      if (!response.ok) throw new Error("Failed to generate code");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to generate code: ${errorData.error?.message || response.statusText}`);
+      }
       
       const data = await response.json();
       let generatedCode = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
@@ -337,29 +375,108 @@ export const CodeEditor: React.FC = () => {
         .replace(/```$/g, '')          // Remove ending code fence
         .trim();
       
-      // Insert the generated code at the cursor position or append to existing code
+      // Add a trailing newline for better code formatting
+      if (!generatedCode.endsWith('\n')) {
+        generatedCode += '\n';
+      }
+      
+      // Always replace the entire content of the editor
       const model = editorRef.getModel();
-      const position = editorRef.getPosition();
+      const fullRange = model.getFullModelRange();
       
       editorRef.executeEdits("generate-code", [{
-        range: {
-          startLineNumber: position.lineNumber,
-          startColumn: position.column,
-          endLineNumber: position.lineNumber,
-          endColumn: position.column
-        },
+        range: fullRange,
         text: generatedCode,
         forceMoveMarkers: true
       }]);
       
-      setOutput(`✅ Generated code inserted successfully!\n\nPrompt: "${codePrompt}"\n\nGenerated code:\n\n${generatedCode}`);
+      setOutput(`✅ Successfully generated and replaced ${selectedLanguage.name} code!
+
+🔍 Prompt: "${codePrompt}"
+
+💡 The original code has been completely replaced with AI-generated code based on your prompt.`);
       
       // Close the modal and reset the prompt
       setIsGenerateModalOpen(false);
       setCodePrompt("");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Code generation error:", error);
-      setOutput("❌ Error generating code. Please try again.");
+      setOutput(`❌ Error generating code: ${error.message || "Unknown error occurred"}\n\nPlease try again with a different prompt.`);
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  };
+
+  const handleExplainCode = async () => {
+    if (!editorRef) return;
+    
+    setIsGeneratingCode(true);
+    setOutput("⏳ Analyzing your code...");
+    
+    try {
+      // Get the API key from the Chatbot component
+      const API_KEY = "AIzaSyClNi8sXsBRlg7uJx6qXV5mOJ-bfWjHZvA";
+      
+      // Get the current code
+      const currentCode = code.trim();
+      
+      // If there's no code to explain, show an error
+      if (!currentCode || currentCode === defaultCode[selectedLanguage.id].trim()) {
+        throw new Error("There's no custom code to explain. Please write or generate some code first.");
+      }
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `You're an expert ${selectedLanguage.name} programmer. Analyze and explain the following ${selectedLanguage.name} code in depth.
+
+CODE TO EXPLAIN:
+\`\`\`${selectedLanguage.id}
+${currentCode}
+\`\`\`
+
+Please provide a detailed explanation covering:
+1. Overall purpose and functionality of the code
+2. Breakdown of key functions/classes and what they do
+3. Important algorithms or data structures used
+4. Potential edge cases or performance considerations
+5. Any best practices followed or areas for improvement
+
+Make your explanation clear and educational, suitable for a programming student.`
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.2,
+            topP: 0.8,
+            maxOutputTokens: 2048
+          }
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to analyze code: ${errorData.error?.message || response.statusText}`);
+      }
+      
+      const data = await response.json();
+      const explanation = data.candidates?.[0]?.content?.parts?.[0]?.text || "No explanation generated.";
+      
+      // Display the explanation in the console output
+      setOutput(`## Code Analysis: ${selectedLanguage.name}
+
+${explanation}`);
+      
+      // Close the modal
+      setIsGenerateModalOpen(false);
+      setCodePrompt("");
+    } catch (error: any) {
+      console.error("Code analysis error:", error);
+      setOutput(`❌ Error analyzing code: ${error.message || "Unknown error occurred"}`);
     } finally {
       setIsGeneratingCode(false);
     }
@@ -401,7 +518,7 @@ export const CodeEditor: React.FC = () => {
                   </motion.button>
 
                   <AnimatePresence>
-                    {isDropdownOpen && (
+                  {isDropdownOpen && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -409,18 +526,18 @@ export const CodeEditor: React.FC = () => {
                         transition={{ duration: 0.2 }}
                         className="absolute top-full left-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200/50 dark:border-gray-700/50 overflow-hidden"
                       >
-                        {languages.map((lang) => (
+                      {languages.map((lang) => (
                           <motion.button
-                            key={lang.id}
-                            onClick={() => handleLanguageChange(lang)}
-                            className={`flex items-center w-full px-4 py-3 text-sm font-medium ${
-                              lang.id === selectedLanguage.id
+                          key={lang.id}
+                          onClick={() => handleLanguageChange(lang)}
+                          className={`flex items-center w-full px-4 py-3 text-sm font-medium ${
+                            lang.id === selectedLanguage.id
                                 ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400"
                                 : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700/50"
                             } transition-colors duration-200`}
                             whileHover={{ x: 4 }}
-                          >
-                            {lang.name}
+                        >
+                          {lang.name}
                           </motion.button>
                         ))}
                       </motion.div>
@@ -516,8 +633,8 @@ export const CodeEditor: React.FC = () => {
                                   </motion.button>
                                 );
                               })}
-                            </div>
-                          )}
+                    </div>
+                  )}
                         </div>
 
                         <div className="px-2 py-2 border-t border-gray-100 dark:border-gray-700">
@@ -656,35 +773,35 @@ export const CodeEditor: React.FC = () => {
                   {fileName || `untitled.${selectedLanguage.id}`}
                 </span>
                 <motion.button
-                  onClick={handleCopyCode}
+                onClick={handleCopyCode}
                   className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                >
-                  {isCopied ? (
+              >
+                {isCopied ? (
                     <Check className="w-4 h-4 text-emerald-500" />
-                  ) : (
+                ) : (
                     <Copy className="w-4 h-4 text-gray-400" />
-                  )}
+                )}
                 </motion.button>
               </div>
               <div className="flex-1 overflow-hidden">
                 {(!fileId || isFileLoaded) && (
-                  <Editor
-                    height="100%"
-                    language={selectedLanguage.id}
-                    value={code}
-                    onChange={(value) => setCode(value || "")}
-                    theme={isDarkMode ? "vs-dark" : "light"}
+                <Editor
+                  height="100%"
+                  language={selectedLanguage.id}
+                  value={code}
+                  onChange={(value) => setCode(value || "")}
+                  theme={isDarkMode ? "vs-dark" : "light"}
                     onMount={(editor) => setEditorRef(editor)}
-                    options={{
-                      fontSize: 14,
+                  options={{
+                    fontSize: 14,
                       fontFamily: "'JetBrains Mono', monospace",
-                      minimap: { enabled: false },
+                    minimap: { enabled: false },
                       padding: { top: 20 },
-                      smoothScrolling: true,
+                    smoothScrolling: true,
                       cursorSmoothCaretAnimation: "on",
-                      renderLineHighlight: "all",
+                    renderLineHighlight: "all",
                       lineHeight: 1.6,
                       letterSpacing: 0.5,
                       scrollBeyondLastLine: false,
@@ -706,11 +823,11 @@ export const CodeEditor: React.FC = () => {
                   Console Output
                 </h3>
                 <motion.button
-                  onClick={() => setOutput("")}
+                    onClick={() => setOutput("")}
                   className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                >
+                  >
                   <XCircle className="w-5 h-5 text-gray-400" />
                 </motion.button>
               </div>
@@ -782,7 +899,7 @@ export const CodeEditor: React.FC = () => {
                   <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-purple-500" />
-                      Generate Code with AI
+                      AI Code Assistant
                     </h3>
                     <button
                       onClick={() => !isGeneratingCode && setIsGenerateModalOpen(false)}
@@ -793,50 +910,132 @@ export const CodeEditor: React.FC = () => {
                     </button>
                   </div>
                   
+                  {/* Mode selector tabs */}
+                  <div className="flex border-b border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => setGenerationMode('generate')}
+                      className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                        generationMode === 'generate'
+                          ? 'text-purple-600 border-b-2 border-purple-500 dark:text-purple-400'
+                          : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                      }`}
+                    >
+                      Generate Code
+                    </button>
+                    <button
+                      onClick={() => setGenerationMode('explain')}
+                      className={`flex-1 py-3 text-sm font-medium transition-colors ${
+                        generationMode === 'explain'
+                          ? 'text-purple-600 border-b-2 border-purple-500 dark:text-purple-400'
+                          : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                      }`}
+                    >
+                      Explain Code
+                    </button>
+                  </div>
+                  
                   <div className="p-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Describe what code you want to generate:
-                    </label>
-                    <textarea
-                      value={codePrompt}
-                      onChange={(e) => setCodePrompt(e.target.value)}
-                      placeholder="E.g., Write a function that calculates the factorial of a number"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[120px] resize-none"
-                      disabled={isGeneratingCode}
-                    />
-                    
-                    <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                      Be specific about what you want. The code will be generated in {selectedLanguage.name}.
-                    </div>
-                    
-                    <div className="mt-6 flex justify-end gap-3">
-                      <button
-                        onClick={() => !isGeneratingCode && setIsGenerateModalOpen(false)}
-                        className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                        disabled={isGeneratingCode}
-                      >
-                        Cancel
-                      </button>
-                      <motion.button
-                        onClick={handleGenerateCode}
-                        className="px-6 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition-colors flex items-center gap-2"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        disabled={!codePrompt.trim() || isGeneratingCode}
-                      >
-                        {isGeneratingCode ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Generating...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-4 h-4" />
-                            <span>Generate</span>
-                          </>
-                        )}
-                      </motion.button>
-                    </div>
+                    {generationMode === 'generate' ? (
+                      // Generate code UI
+                      <>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Describe what code you want to generate:
+                        </label>
+                        <textarea
+                          value={codePrompt}
+                          onChange={(e) => setCodePrompt(e.target.value)}
+                          placeholder="E.g., Create a binary search tree implementation with insert and search methods"
+                          className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[120px] resize-none"
+                          disabled={isGeneratingCode}
+                        />
+                        
+                        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-start gap-2">
+                          <span className="text-purple-500">Note:</span>
+                          <span>
+                            The AI will analyze your current code and generate a completely new solution
+                            based on your prompt. All existing code will be replaced.
+                          </span>
+                        </div>
+                        
+                        <div className="mt-6 flex justify-end gap-3">
+                          <button
+                            onClick={() => !isGeneratingCode && setIsGenerateModalOpen(false)}
+                            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            disabled={isGeneratingCode}
+                          >
+                            Cancel
+                          </button>
+                          <motion.button
+                            onClick={handleGenerateCode}
+                            className="px-6 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition-colors flex items-center gap-2"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            disabled={!codePrompt.trim() || isGeneratingCode}
+                          >
+                            {isGeneratingCode ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>Generating...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-4 h-4" />
+                                <span>Generate & Replace</span>
+                              </>
+                            )}
+                          </motion.button>
+                        </div>
+                      </>
+                    ) : (
+                      // Explain code UI
+                      <>
+                        <div className="space-y-4">
+                          <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                              <Terminal className="w-4 h-4 text-purple-500" />
+                              Current Code
+                            </h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              The AI will analyze and explain the code currently in your editor.
+                            </p>
+                          </div>
+                          
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Get an in-depth explanation of your code's functionality, structure, algorithms,
+                            and best practices. This can help you understand complex code or learn new programming concepts.
+                          </p>
+                        </div>
+                        
+                        <div className="mt-6 flex justify-end gap-3">
+                          <button
+                            onClick={() => !isGeneratingCode && setIsGenerateModalOpen(false)}
+                            className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            disabled={isGeneratingCode}
+                          >
+                            Cancel
+                          </button>
+                          <motion.button
+                            onClick={handleExplainCode}
+                            className="px-6 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition-colors flex items-center gap-2"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            disabled={isGeneratingCode}
+                          >
+                            {isGeneratingCode ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>Analyzing...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Code2 className="w-4 h-4" />
+                                <span>Analyze & Explain</span>
+                              </>
+                            )}
+                          </motion.button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </motion.div>
               </motion.div>
