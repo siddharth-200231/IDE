@@ -46,7 +46,12 @@ const validateUser = (req, res, next) => {
 
     try {  
         const decoded = jwt.verify(token, process.env.key);
-        req.user = decoded;
+        // Add user ID to the request
+        req.user = {
+            id: decoded.id,  // Add this
+            email: decoded.email,
+            name: decoded.name
+        };
         next();
     } catch (error) {
         console.log("Token verification failed:", error.message);

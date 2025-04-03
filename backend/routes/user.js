@@ -19,10 +19,15 @@ router.post("/register", async (req, res) => {
         if (existingUser) {
             return res.status(400).json({ error: "User already exists" });
         }
-        const token = jwt.sign({ email, name }, process.env.key);
         const user = await User.create({ email, name, password });
+        const token = jwt.sign({ 
+            id: user._id, 
+            email, 
+            name 
+        }, process.env.key);
+        
         res.cookie("token", token);
-        return res.status(201).json({ user: { email, name }, token });
+        return res.status(201).json({ user: { id: user._id, email, name }, token });
     }
     catch (error) {
         if (error instanceof zod.ZodError) {
@@ -36,10 +41,14 @@ router.post("/register", async (req, res) => {
 });
 
 router.post("/login", authMiddleware, async (req, res) => {
-    const { email, name } = req.user;
-    const token = jwt.sign({ email, name }, process.env.key);
+    const { _id, email, name } = req.user;
+    const token = jwt.sign({ 
+        id: _id, 
+        email, 
+        name 
+    }, process.env.key);
     res.cookie("token", token);
-    return res.status(200).json({ user: { email, name }, token });
+    return res.status(200).json({ user: { id: _id, email, name }, token });
 });
 
 router.get("/logout", validateUser, (req, res) => {

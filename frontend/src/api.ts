@@ -6,5 +6,10 @@ export const API_ENDPOINTS = {
     LOGOUT: '/user/logout',
     LOGIN: '/user/login',
     REGISTER: '/user/register'
+  },
+  FILES: {
+    SAVE: '/files/save',
+    LIST: '/files/list',
+    GET: (fileId: string) => `/files/${fileId}`
   }
 };

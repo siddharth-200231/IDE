@@ -1,6 +1,13 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
+const fileSchema = new Schema({
+  name: String,
+  s3Key: String,
+  language: String,
+  createdAt: { type: Date, default: Date.now }
+});
+
 const userSchema = new Schema({
     email: { 
         type: String, 
@@ -18,7 +25,8 @@ const userSchema = new Schema({
         type: String, 
         required: true,
         minlength: 6
-    }
+    },
+    files: [fileSchema]
 }, {
     timestamps: true // Adds createdAt and updatedAt
 });
