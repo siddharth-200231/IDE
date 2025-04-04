@@ -1,4 +1,6 @@
-export const BASE_URL = 'http://localhost:3000';
+export const BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://your-production-url.com' 
+  : 'http://localhost:3000'; // Always connect to port 3000, not the frontend port
 
 export const API_ENDPOINTS = {
   AUTH: {

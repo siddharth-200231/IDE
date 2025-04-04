@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Code2, LogOut, Flame, Folder, FilePlus, Book, Plus, ChevronDown, Trash2, Check, AlertTriangle, X } from 'lucide-react';
+import { Code2, LogOut, Flame, Folder, FilePlus, Book, Plus, ChevronDown, Trash2, Check, AlertTriangle, X, Users, Share2 } from 'lucide-react';
 import axios from 'axios';
 import { useUser } from '../context/userContext';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
@@ -81,6 +81,9 @@ export const LanguageSelection: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastProps>({ visible: false, message: '', type: '' });
   const [hoveredLanguage, setHoveredLanguage] = useState<string | null>(null);
+  const [joinSessionId, setJoinSessionId] = useState('');
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [joinLanguage, setJoinLanguage] = useState('javascript');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -218,8 +221,46 @@ export const LanguageSelection: React.FC = () => {
     });
   };
 
+  const handleCreateCollabSession = (languageId: string) => {
+    const sessionId = uuidv4(); // Generate unique session ID
+    
+    // Ensure we only have the sessionId in the URL, not any extra URL parts
+    const cleanSessionId = sessionId.trim().replace(/[^a-zA-Z0-9-]/g, '');
+    
+    // Log the generated session URL for debugging
+    console.log(`Creating collab session with URL: /collab/${languageId}/${cleanSessionId}`);
+    
+    // Navigate to the properly formatted URL
+    navigate(`/collab/${languageId}/${cleanSessionId}`);
+  };
+
+  // Add this helper function to normalize session IDs
+  const normalizeSessionId = (id: string): string => {
+    // Remove any spaces or special characters that might cause issues
+    return id.trim().replace(/[^a-zA-Z0-9-]/g, '');
+  };
+
+  // Then update the handleJoinSession function
+  const handleJoinSession = () => {
+    const normalizedId = normalizeSessionId(joinSessionId);
+    
+    if (!normalizedId) {
+      setToast({
+        visible: true,
+        message: 'Please enter a valid Session ID',
+        type: 'error'
+      });
+      setTimeout(() => setToast({ visible: false, message: '', type: '' }), 3000);
+      return;
+    }
+    
+    // Navigate with the normalized ID
+    navigate(`/collab/${joinLanguage}/${normalizedId}`);
+    setShowJoinModal(false);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-[#0F172A] dark:to-[#1E293B] relative overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-800/20 to-gray-900/60">
         <div className="absolute inset-0 bg-[url(/grid.svg)] bg-center [mask-image:linear-gradient(to_bottom,white,transparent)] opacity-10" />
@@ -337,9 +378,77 @@ export const LanguageSelection: React.FC = () => {
           </p>
         </motion.div>
 
-        {/* Files Section */}
+        {/* Move Live Collaboration Section to the top */}
+        <motion.div
+          className="mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <Users className="w-6 h-6 text-indigo-500" />
+            <h2 className="text-2xl font-bold text-gray-100">Live Collaboration</h2>
+        </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Create New Session Card */}
+            <motion.div
+              className="bg-gray-800/50 backdrop-blur-lg rounded-xl border border-gray-700/30 overflow-hidden"
+              whileHover={{ y: -5, boxShadow: "0 10px 30px -15px rgba(0,0,0,0.2)" }}
+            >
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-100 mb-3">
+                  Create New Collaboration
+                </h3>
+                <p className="text-gray-400 mb-6">
+                  Start a new collaborative coding session and invite others to join.
+                </p>
+                
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  {languages.map((lang) => (
+                    <motion.button
+                      key={lang.id}
+                      onClick={() => handleCreateCollabSession(lang.id)}
+                      className={`p-4 rounded-lg border ${lang.border} bg-gradient-to-br ${lang.gradient} flex flex-col items-center justify-center gap-2 hover:opacity-90`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <span className="text-2xl">{lang.icon}</span>
+                      <span className={`text-sm font-medium ${lang.color}`}>{lang.name}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+            
+            {/* Join Existing Session Card */}
+            <motion.div
+              className="bg-gray-800/50 backdrop-blur-lg rounded-xl border border-gray-700/30 overflow-hidden"
+              whileHover={{ y: -5, boxShadow: "0 10px 30px -15px rgba(0,0,0,0.2)" }}
+            >
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-100 mb-3">
+                  Join Existing Session
+                </h3>
+                <p className="text-gray-400 mb-6">
+                  Enter a session ID to join an existing collaborative coding session.
+                </p>
+                
+                <button
+                  onClick={() => setShowJoinModal(true)}
+                  className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Share2 className="w-5 h-5" />
+                  <span>Join Session</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* Files Section - now comes after collaboration */}
         <motion.div 
-          className="mb-20"
+          className="mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -375,7 +484,7 @@ export const LanguageSelection: React.FC = () => {
               </motion.button>
 
               <AnimatePresence>
-                {isDropdownOpen && (
+              {isDropdownOpen && (
                   <motion.div 
                     className="absolute right-0 mt-2 w-full sm:w-56 bg-gray-800 border border-gray-700/60 rounded-lg shadow-xl z-50 overflow-hidden"
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -383,17 +492,17 @@ export const LanguageSelection: React.FC = () => {
                     exit={{ opacity: 0, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
                   >
-                    {languages.map((lang) => (
+                  {languages.map((lang) => (
                       <motion.button
-                        key={lang.id}
-                        onClick={() => handleNewFile(lang.id)}
-                        className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-700/60 text-gray-200 transition-colors"
+                      key={lang.id}
+                      onClick={() => handleNewFile(lang.id)}
+                      className="flex items-center gap-3 w-full px-4 py-3 hover:bg-gray-700/60 text-gray-200 transition-colors"
                         whileHover={{ backgroundColor: 'rgba(79, 84, 92, 0.6)' }}
                         onHoverStart={() => setHoveredLanguage(lang.id)}
                         onHoverEnd={() => setHoveredLanguage(null)}
-                      >
-                        <span className={`text-xl ${lang.color}`}>{lang.icon}</span>
-                        <span className="text-sm">{lang.name}</span>
+                    >
+                      <span className={`text-xl ${lang.color}`}>{lang.icon}</span>
+                      <span className="text-sm">{lang.name}</span>
                         {hoveredLanguage === lang.id && (
                           <motion.span
                             className="ml-auto text-indigo-400"
@@ -497,7 +606,7 @@ export const LanguageSelection: React.FC = () => {
                             >
                               Cancel
                             </motion.button>
-                          </div>
+                </div>
                         </motion.div>
                       </motion.div>
                     )}
@@ -527,7 +636,7 @@ export const LanguageSelection: React.FC = () => {
           )}
         </motion.div>
 
-        {/* Language Cards Grid */}
+        {/* Language Cards Grid - now comes last */}
         <motion.div 
           className="mt-16"
           initial={{ opacity: 0, y: 30 }}
@@ -581,6 +690,90 @@ export const LanguageSelection: React.FC = () => {
             ))}
           </div>
         </motion.div>
+
+        {/* Join Session Modal */}
+        <AnimatePresence>
+          {showJoinModal && (
+            <motion.div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowJoinModal(false)}
+            >
+              <motion.div
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                    Join Collaboration Session
+                  </h3>
+                  <button
+                    onClick={() => setShowJoinModal(false)}
+                    className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
+                </div>
+                
+                <div className="p-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Session ID
+                      </label>
+                      <input
+                        type="text"
+                        value={joinSessionId}
+                        onChange={(e) => setJoinSessionId(e.target.value)}
+                        placeholder="Paste the session ID here"
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Programming Language
+                      </label>
+                      <select
+                        value={joinLanguage}
+                        onChange={(e) => setJoinLanguage(e.target.value)}
+                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      >
+                        {languages.map(lang => (
+                          <option key={lang.id} value={lang.id}>{lang.name}</option>
+                        ))}
+                      </select>
+        </div>
+      </div>
+
+                  <div className="mt-6 flex justify-end gap-3">
+                    <button
+                      onClick={() => setShowJoinModal(false)}
+                      className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <motion.button
+                      onClick={handleJoinSession}
+                      className="px-6 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex items-center gap-2"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      disabled={!joinSessionId.trim()}
+                    >
+                      <Share2 className="w-4 h-4" />
+                      <span>Join Session</span>
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

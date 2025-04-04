@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
@@ -51,8 +51,6 @@ const languages = [
   { id: "java", name: "Java" },
 ];
 
-const socket = io(BASE_URL);
-
 export const CodeEditor: React.FC = () => {
   const { language } = useParams<{ language: string }>();
   const navigate = useNavigate();
@@ -98,6 +96,7 @@ export const CodeEditor: React.FC = () => {
   const [editorRef, setEditorRef] = useState<any>(null);
   const [replaceAllCode, setReplaceAllCode] = useState(false);
   const [generationMode, setGenerationMode] = useState<'generate' | 'explain'>('generate');
+  const socketRef = useRef<any>(null);
 
   useEffect(() => {
     if (monaco) {
@@ -225,7 +224,7 @@ export const CodeEditor: React.FC = () => {
         `${BASE_URL}/files/save`,
         {
           content: code,
-          filename: name, 
+          filename: name,
           language: selectedLanguage.id,
           fileId: fileId, // Use the fileId from state instead of getting it directly from searchParams
         },
@@ -266,26 +265,28 @@ export const CodeEditor: React.FC = () => {
     }
   };
 
-  const handleRunCode = () => {
-    setIsRunning(true);
-    setOutput("");
-    socket.emit("execute_code", {
-      language: selectedLanguage.id,
-      code,
-    });
-  };
-
   useEffect(() => {
+    // Create socket connection
+    socketRef.current = io(BASE_URL, {
+      transports: ['websocket', 'polling']
+    });
+
+    const socket = socketRef.current;
+
+    socket.on("connect", () => {
+      console.log("Socket connected successfully");
+    });
+
     socket.on("execution_status", (status) => {
-      setOutput((prev) => `${prev}${status}\n`);
+      setOutput(prev => `${prev}${status}\n`);
     });
 
     socket.on("code_output", (output) => {
-      setOutput((prev) => `${prev}${output}`);
+      setOutput(prev => `${prev}${output}`);
     });
 
     socket.on("execution_error", (error) => {
-      setOutput((prev) => `${prev}\n\n\x1b[31mError: ${error}\x1b[0m`);
+      setOutput(prev => `${prev}\nError: ${error}`);
       setIsRunning(false);
     });
 
@@ -294,12 +295,23 @@ export const CodeEditor: React.FC = () => {
     });
 
     return () => {
-      socket.off("execution_status");
-      socket.off("code_output");
-      socket.off("execution_error");
-      socket.off("execution_complete");
+      if (socket) {
+        socket.disconnect();
+      }
     };
-  }, []);
+  }, []); // Empty dependency array as we only want to initialize once
+
+  const handleRunCode = () => {
+    if (!socketRef.current || isRunning) return;
+
+    setIsRunning(true);
+    setOutput('');
+    
+    socketRef.current.emit('execute_code', {
+      language: selectedLanguage.id,
+      code
+    });
+  };
 
   const handleCopyCode = async () => {
     try {

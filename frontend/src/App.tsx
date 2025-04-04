@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import { LanguageSelection } from './pages/LanguageSelection';
 import { CodeEditor } from './pages/Editor';
+import { CollabEditor } from './pages/CollabEditor';
 import Signup from './pages/Signup';
 import SignIn from './pages/SignIn';
 import Home from './pages/Home';
@@ -33,6 +34,11 @@ const router = createBrowserRouter(
       <Route path="/editor/:language" element={
         <Protected>
           <CodeEditor />
+        </Protected>
+      } />
+      <Route path="/collab/:language/:sessionId" element={
+        <Protected>
+          <CollabEditor />
         </Protected>
       } />
       <Route path="*" element={<Navigate to="/" />} />
