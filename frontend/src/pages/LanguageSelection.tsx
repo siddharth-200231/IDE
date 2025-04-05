@@ -1,7 +1,11 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Code2, LogOut, Flame, Folder, FilePlus, Book, Plus, ChevronDown, Trash2, Check, AlertTriangle, X, Users, Share2 } from 'lucide-react';
+import { 
+  Code2, LogOut, Flame, Folder, FilePlus, Book, Plus, 
+  ChevronDown, Trash2, Check, AlertTriangle, X, 
+  Users, Share2, Coffee, FileCode, Braces 
+} from 'lucide-react';
 import axios from 'axios';
 import { useUser } from '../context/userContext';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
@@ -9,13 +13,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 import { BASE_URL, API_ENDPOINTS } from "../api";
 
-// Update the languages array with new styling properties
+// Updated languages array with external image icons
 const languages = [
   {
     id: 'javascript',
     name: 'JavaScript',
     description: 'Modern web development with ES6+ features',
-    icon: '🟨',
+    icon: <img 
+      width="36" 
+      height="36" 
+      src="https://img.icons8.com/color/48/javascript--v1.png" 
+      alt="javascript logo" 
+      className="object-contain"
+    />,
     popular: true,
     color: 'text-yellow-400',
     gradient: 'from-yellow-400/10 to-orange-500/10',
@@ -27,7 +37,13 @@ const languages = [
     id: 'python',
     name: 'Python',
     description: 'Data science & machine learning',
-    icon: '🐍',
+    icon: <img 
+      width="36" 
+      height="36" 
+      src="https://img.icons8.com/fluency/50/python.png" 
+      alt="python logo" 
+      className="object-contain"
+    />,
     popular: true,
     color: 'text-emerald-400',
     gradient: 'from-emerald-400/10 to-teal-500/10',
@@ -39,7 +55,13 @@ const languages = [
     id: 'java',
     name: 'Java',
     description: 'Enterprise-scale applications',
-    icon: '☕',
+    icon: <img 
+      width="36" 
+      height="36" 
+      src="https://img.icons8.com/color/48/java-coffee-cup-logo--v1.png" 
+      alt="java logo" 
+      className="object-contain"
+    />,
     popular: false,
     color: 'text-red-400',
     gradient: 'from-red-400/10 to-orange-500/10',
@@ -375,7 +397,21 @@ export const LanguageSelection: React.FC = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <span className="text-2xl">{lang.icon}</span>
+                        <div className="w-8 h-8">
+                          <img 
+                            width="32" 
+                            height="32" 
+                            src={
+                              lang.id === 'javascript' 
+                                ? "https://img.icons8.com/color/48/javascript--v1.png" 
+                                : lang.id === 'python'
+                                  ? "https://img.icons8.com/fluency/50/python.png"
+                                  : "https://img.icons8.com/color/48/java-coffee-cup-logo--v1.png"
+                            } 
+                            alt={`${lang.name} logo`} 
+                            className="object-contain"
+                          />
+                        </div>
                         <span className={`text-sm font-medium ${lang.color}`}>{lang.name}</span>
                       </motion.button>
                     ))}
@@ -421,9 +457,25 @@ export const LanguageSelection: React.FC = () => {
                 whileHover={{ y: -5 }}
               >
                 <div className="flex items-start gap-4">
-                  <div className={`p-3 rounded-xl ${lang.iconBg}`}>
-                    <span className="text-3xl">{lang.icon}</span>
-                  </div>
+                  <motion.div 
+                    className={`p-3 rounded-xl ${lang.iconBg} flex items-center justify-center`}
+                    whileHover={{ rotate: 5, scale: 1.1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <img 
+                      width="24" 
+                      height="24" 
+                      src={
+                        lang.id === 'javascript' 
+                          ? "https://img.icons8.com/color/48/javascript--v1.png" 
+                          : lang.id === 'python'
+                            ? "https://img.icons8.com/fluency/50/python.png"
+                            : "https://img.icons8.com/color/48/java-coffee-cup-logo--v1.png"
+                      } 
+                      alt={`${lang.name} logo`} 
+                      className="object-contain"
+                    />
+                  </motion.div>
                   <div>
                     <h3 className={`text-xl font-semibold ${lang.color} mb-2`}>
                       {lang.name}
@@ -496,7 +548,21 @@ export const LanguageSelection: React.FC = () => {
                           onHoverStart={() => setHoveredLanguage(lang.id)}
                           onHoverEnd={() => setHoveredLanguage(null)}
                       >
-                        <span className={`text-xl ${lang.color}`}>{lang.icon}</span>
+                        <div className="w-6 h-6 flex items-center justify-center">
+                          <img 
+                            width="24" 
+                            height="24" 
+                            src={
+                              lang.id === 'javascript' 
+                                ? "https://img.icons8.com/color/48/javascript--v1.png" 
+                                : lang.id === 'python'
+                                  ? "https://img.icons8.com/fluency/50/python.png"
+                                  : "https://img.icons8.com/color/48/java-coffee-cup-logo--v1.png"
+                            } 
+                            alt={`${lang.name} logo`} 
+                            className="object-contain"
+                          />
+                        </div>
                         <span className="text-sm">{lang.name}</span>
                           {hoveredLanguage === lang.id && (
                             <motion.span
@@ -685,7 +751,9 @@ export const LanguageSelection: React.FC = () => {
                           className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         >
                           {languages.map(lang => (
-                            <option key={lang.id} value={lang.id}>{lang.name}</option>
+                            <option key={lang.id} value={lang.id} className="flex items-center gap-2">
+                              {lang.name}
+                            </option>
                           ))}
                         </select>
                       </div>

@@ -37,6 +37,8 @@ import { BASE_URL, API_ENDPOINTS } from "../api";
 import { Chatbot } from "../components/Chatbot";
 import axios from "axios";
 import { motion, AnimatePresence } from 'framer-motion';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faJs, faPython, faJava } from '@fortawesome/free-brands-svg-icons';
 
 const defaultCode: Record<string, string> = {
   javascript:
@@ -631,11 +633,17 @@ ${explanation}`);
                                     whileHover={{ x: 4 }}
                                   >
                                     <div className="flex-1 truncate flex items-center">
-                                      {/* Show language-specific icon */}
+                                      {/* Show language-specific icon with Font Awesome */}
                                       <span className="mr-2 w-5 h-5 flex-shrink-0 flex items-center justify-center">
-                                        {file.language === 'javascript' && <span className="text-yellow-500">JS</span>}
-                                        {file.language === 'python' && <span className="text-green-500">PY</span>}
-                                        {file.language === 'java' && <span className="text-orange-500">JV</span>}
+                                        {file.language === 'javascript' && (
+                                          <FontAwesomeIcon icon={faJs} className="text-yellow-500" />
+                                        )}
+                                        {file.language === 'python' && (
+                                          <FontAwesomeIcon icon={faPython} className="text-green-500" />
+                                        )}
+                                        {file.language === 'java' && (
+                                          <FontAwesomeIcon icon={faJava} className="text-orange-500" />
+                                        )}
                                       </span>
                                       <span className="truncate">{file.name}</span>
                                     </div>
@@ -645,8 +653,8 @@ ${explanation}`);
                                   </motion.button>
                                 );
                               })}
-                    </div>
-                  )}
+                            </div>
+                          )}
                         </div>
 
                         <div className="px-2 py-2 border-t border-gray-100 dark:border-gray-700">
