@@ -12,6 +12,7 @@ import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
 import { v4 as uuidv4 } from 'uuid';
 import { BASE_URL, API_ENDPOINTS } from "../api";
+import { showToast } from "../components/Toaster";
 
 // Updated languages array with external image icons
 const languages = [
@@ -108,7 +109,6 @@ export const LanguageSelection: React.FC = () => {
   const [isCreatingFile, setIsCreatingFile] = useState(false);
   const [isDeletingFile, setIsDeletingFile] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [toast, setToast] = useState<ToastProps>({ visible: false, message: '', type: '' });
   const [hoveredLanguage, setHoveredLanguage] = useState<string | null>(null);
   const [joinSessionId, setJoinSessionId] = useState('');
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -216,21 +216,10 @@ export const LanguageSelection: React.FC = () => {
       setSavedFiles(files => files.filter(f => f.s3Key !== fileId));
       
       // Show success toast
-      setToast({
-        visible: true,
-        message: 'File deleted successfully',
-        type: 'success'
-      });
-      
-      setTimeout(() => setToast({ visible: false, message: '', type: '' }), 3000);
+      showToast.success('File deleted successfully');
     } catch (error) {
       console.error('Failed to delete file:', error);
-      setToast({
-        visible: true,
-        message: 'Failed to delete file',
-        type: 'error'
-      });
-      setTimeout(() => setToast({ visible: false, message: '', type: '' }), 3000);
+      showToast.error('Failed to delete file');
     } finally {
       setIsDeletingFile(null);
       setConfirmDelete(null);
@@ -274,12 +263,7 @@ export const LanguageSelection: React.FC = () => {
     const normalizedId = normalizeSessionId(joinSessionId);
     
     if (!normalizedId) {
-      setToast({
-        visible: true,
-        message: 'Please enter a valid Session ID',
-        type: 'error'
-      });
-      setTimeout(() => setToast({ visible: false, message: '', type: '' }), 3000);
+      showToast.error('Please enter a valid Session ID');
       return;
     }
     
@@ -297,27 +281,6 @@ export const LanguageSelection: React.FC = () => {
       {/* Decorative Elements */}
       <div className="absolute top-20 left-10 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
-
-      {/* Toast notification */}
-      <AnimatePresence>
-        {toast.visible && (
-          <motion.div 
-            className={`fixed top-6 right-6 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 z-50 ${
-              toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-            }`}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-          >
-            {toast.type === 'success' ? (
-              <Check className="w-5 h-5" />
-            ) : (
-              <AlertTriangle className="w-5 h-5" />
-            )}
-            <span>{toast.message}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Main Content */}
       <div className="relative">

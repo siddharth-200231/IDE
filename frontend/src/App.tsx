@@ -15,6 +15,7 @@ import Signup from './pages/Signup';
 import SignIn from './pages/SignIn';
 import Home from './pages/Home';
 import Protected from './pages/Protected';
+import Toaster from './components/Toaster';
 
 // Create router with future flags
 const router = createBrowserRouter(
@@ -54,7 +55,10 @@ const router = createBrowserRouter(
 
 function App() {
   return (
-    <RouterProvider router={router} />
+    <>
+      <Toaster position="top-right" />
+      <RouterProvider router={router} />
+    </>
   );
 }
 

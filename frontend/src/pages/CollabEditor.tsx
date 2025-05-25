@@ -11,6 +11,7 @@ import {
 import { toast } from 'react-hot-toast';
 import { useUser } from '../context/userContext';
 import { BASE_URL } from '../api';
+import { showToast } from "../components/Toaster";
 
 // Define the language types
 const languages = {
@@ -273,7 +274,7 @@ export const CollabEditor: React.FC = () => {
     
     navigator.clipboard.writeText(inviteLink);
     setIsInviteCopied(true);
-    toast.success('Collaboration link copied to clipboard!');
+    showToast.success('Collaboration link copied to clipboard!');
     setTimeout(() => setIsInviteCopied(false), 2000);
   };
   
@@ -296,9 +297,9 @@ export const CollabEditor: React.FC = () => {
   // Add toast notifications for connection events
   useEffect(() => {
     if (connectionStatus === 'connected') {
-      toast.success('Connected to collaboration session!');
+      showToast.success('Connected to collaboration session!');
     } else if (connectionStatus === 'error') {
-      toast.error(`Connection error: ${connectionError || 'Failed to connect'}`);
+      showToast.error(`Connection error: ${connectionError || 'Failed to connect'}`);
     }
   }, [connectionStatus, connectionError]);
 
@@ -307,7 +308,7 @@ export const CollabEditor: React.FC = () => {
     if (!sessionId) return;
     
     navigator.clipboard.writeText(sessionId);
-    toast.success('Session ID copied to clipboard');
+    showToast.success('Session ID copied to clipboard');
   };
 
   return (

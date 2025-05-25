@@ -27,6 +27,7 @@
     "react-hot-toast": "^2.5.1",
     "react-router-dom": "^6.22.2",
     "socket.io-client": "^4.8.1",
+    "use-debounce": "^10.0.4",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
