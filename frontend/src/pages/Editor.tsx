@@ -28,6 +28,7 @@ import {
   RotateCw,
   Clock,
   FileCode,
+  Timer,
 } from "lucide-react";
 import { Button } from "../components/Button";
 import { pythonLanguage, javaLanguage } from "../utils/languageConfigs";
@@ -477,14 +478,23 @@ ${currentCode}
 
 TASK: ${codePrompt}
 
-Important instructions:
-- Generate a complete, executable ${selectedLanguage.name} solution
-- The code should follow best practices for ${selectedLanguage.name}
-- Include proper error handling where appropriate
-- Your response will COMPLETELY REPLACE the current code in the editor
-- Provide ONLY the code without any explanations, comments (unless they're part of the code), or markdown formatting
-- Make sure the code is immediately runnable in our platform
-- The code should handle the specific task described while preserving the general intent of the original code if appropriate`
+Generate a complete, self-executing ${selectedLanguage.name} solution that:
+- Runs automatically without ANY user input (no input(), raw_input(), readline(), prompts, or interactive elements)
+- Uses hardcoded test data, sample values, or generates data programmatically
+- Solves the problem with pre-defined inputs embedded in the code
+- Contains only essential lines - eliminate all unnecessary code
+- Follows ${selectedLanguage.name} best practices
+- Executes immediately when run
+- Produces visible output or results automatically
+
+Critical requirements:
+- ZERO user interaction - code must run start-to-finish automatically
+- Replace ALL input mechanisms with hardcoded values
+- Self-contained and immediately executable
+- Minimal code - only what's necessary for functionality
+- No explanations, comments, or markdown formatting
+
+Provide ONLY the executable code.`
             }]
           }],
           generationConfig: {
@@ -742,8 +752,7 @@ Please provide a detailed explanation covering:
 1. Overall purpose and functionality of the code
 2. Breakdown of key functions/classes and what they do
 3. Important algorithms or data structures used
-4. Potential edge cases or performance considerations
-5. Any best practices followed or areas for improvement
+
 
 Make your explanation clear and educational, suitable for a programming student.`
             }]
@@ -886,7 +895,6 @@ ${code}`
     setIsRefactoringModalOpen(true);
     
     try {
-      // Use the consistent API key and endpoint
       const API_KEY = "AIzaSyClNi8sXsBRlg7uJx6qXV5mOJ-bfWjHZvA";
       
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
@@ -911,8 +919,7 @@ Return JSON in this format only:
       "title": "<refactoring_title>",
       "description": "<benefits_description>",
       "code": "<complete_refactored_code>"
-    },
-    ...
+    }
   ]
 }
 
@@ -937,64 +944,30 @@ ${code}`
       const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       
       try {
-        // Extract JSON from the response - handle markdown code blocks
-        let jsonString = resultText;
+        // Clean the response text
+        let jsonString = resultText
+          .replace(/```json\n|```/g, '') // Remove markdown code blocks
+          .replace(/^[^{]*/, '') // Remove any text before the first {
+          .replace(/[^}]*$/, ''); // Remove any text after the last }
         
-        // Remove markdown code blocks if present
-        if (resultText.includes('```json')) {
-          jsonString = resultText.replace(/```json\n|```/g, '');
-        } else {
-          // Try to extract JSON object
-          const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-          jsonString = jsonMatch ? jsonMatch[0] : resultText;
-        }
-        
-        // Parse the JSON
         const result = JSON.parse(jsonString);
         
-        if (result.refactoringOptions && Array.isArray(result.refactoringOptions)) {
+        if (result.refactoringOptions && Array.isArray(result.refactoringOptions) && result.refactoringOptions.length > 0) {
           setRefactoringOptions(result.refactoringOptions);
-        } else if (result.candidates && result.candidates[0]?.content?.parts) {
-          // Handle the nested response format shown in the example
-          try {
-            const nestedText = result.candidates[0].content.parts[0].text;
-            // Extract JSON from nested text
-            const nestedJsonMatch = nestedText.match(/\{[\s\S]*\}/);
-            const nestedJsonString = nestedJsonMatch ? nestedJsonMatch[0] : nestedText;
-            
-            // Remove markdown code blocks if present
-            const cleanedNestedJson = nestedJsonString.replace(/```json\n|```/g, '');
-            
-            const nestedResult = JSON.parse(cleanedNestedJson);
-            if (nestedResult.refactoringOptions && Array.isArray(nestedResult.refactoringOptions)) {
-              setRefactoringOptions(nestedResult.refactoringOptions);
-            } else {
-              throw new Error('Invalid nested response format');
-            }
-          } catch (nestedError) {
-            console.error('Failed to parse nested response:', nestedError);
-            setRefactoringOptions([]);
-            toast.error('Failed to parse refactoring options');
-          }
+          toast.success(`Generated ${result.refactoringOptions.length} refactoring options`);
         } else {
-          // Set empty array but with a message
           setRefactoringOptions([]);
-          toast.success("No refactoring suggestions available for this code", {
-            icon: 'ℹ️',
-            style: {
-              backgroundColor: '#f0f9ff',
-              color: '#0c4a6e',
-              border: '1px solid #bae6fd'
-            }
-          });
+          toast.success("No refactoring suggestions available for this code");
         }
       } catch (e) {
         console.error("Failed to parse AI response:", e);
-        toast.error("Failed to generate refactoring options");
+        setRefactoringOptions([]);
+        toast.error("Failed to parse refactoring options");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating refactoring options:", error);
-      toast.error("Failed to generate refactoring options");
+      toast.error(`Failed to generate refactoring options: ${error.message}`);
+      setRefactoringOptions([]);
     } finally {
       setIsGeneratingRefactorOptions(false);
     }
@@ -1941,82 +1914,72 @@ ${code}`
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => !isGeneratingCode && setIsGenerateModalOpen(false)}
+                onClick={() => setIsGenerateModalOpen(false)}
               >
                 <motion.div
-              className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-200/50 dark:border-slate-700/50"
+              className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden border border-slate-200/50 dark:border-slate-700/50"
               initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
                   onClick={(e) => e.stopPropagation()}
                 >
-              <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+              <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                   {generationMode === 'generate' ? (
                     <>
                       <Sparkles className="w-5 h-5 text-purple-500" />
-                      AI Code Generator
+                      Generate Code
                     </>
                   ) : (
                     <>
-                      <Terminal className="w-5 h-5 text-blue-500" />
-                      Code Explanation
+                      <Code2 className="w-5 h-5 text-blue-500" />
+                      Explain Code
                     </>
                   )}
-                    </h3>
-                    <button
-                      onClick={() => !isGeneratingCode && setIsGenerateModalOpen(false)}
+                </h2>
+                <button
+                  onClick={() => setIsGenerateModalOpen(false)}
                   className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      disabled={isGeneratingCode}
-                    >
+                >
                   <X className="w-5 h-5 text-slate-500" />
-                    </button>
+                </button>
+              </div>
+              
+              <div className="p-6">
+                {isGeneratingCode ? (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <div className="relative w-12 h-12">
+                      <div className="absolute inset-0 rounded-full border-3 border-purple-500/30 animate-pulse" />
+                      <div className="absolute inset-0 rounded-full border-3 border-purple-500 border-t-transparent animate-spin" />
+                    </div>
+                    <p className="mt-4 text-slate-600 dark:text-slate-400">
+                      {generationMode === 'generate' ? 'Generating code...' : 'Analyzing code...'}
+                    </p>
+                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-500">
+                      This may take a moment for complex tasks
+                    </p>
                   </div>
-                  
-                  {/* Mode selector tabs */}
-              <div className="flex border-b border-slate-200 dark:border-slate-800">
-                    <button
-                      onClick={() => setGenerationMode('generate')}
-                      className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                        generationMode === 'generate'
-                      ? 'text-purple-600 border-b-2 border-purple-500 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/10'
-                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
-                      }`}
-                    >
-                      Generate Code
-                    </button>
-                    <button
-                      onClick={() => setGenerationMode('explain')}
-                      className={`flex-1 py-3 text-sm font-medium transition-colors ${
-                        generationMode === 'explain'
-                      ? 'text-blue-600 border-b-2 border-blue-500 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/10'
-                      : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300'
-                      }`}
-                    >
-                      Explain Code
-                    </button>
-                  </div>
-                  
-                  <div className="p-6">
+                ) : (
+                  <>
                     {generationMode === 'generate' ? (
                       // Generate code UI
                       <>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      What would you like to create?
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                          What would you like to create?
                         </label>
                         <textarea
                           value={codePrompt}
                           onChange={(e) => setCodePrompt(e.target.value)}
                           placeholder="Example: Create a REST API endpoint with Express.js that handles user authentication..."
-                      className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[120px] resize-none text-sm"
+                          className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent min-h-[120px] resize-none text-sm"
                           disabled={isGeneratingCode}
                         />
                         
-                    <div className="mt-3 text-xs text-slate-500 dark:text-slate-400 flex items-start gap-2 p-3 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-100 dark:border-purple-800/20">
-                      <span className="text-purple-500 mt-0.5">💡</span>
+                        <div className="mt-3 text-xs text-slate-500 dark:text-slate-400 flex items-start gap-2 p-3 bg-purple-50 dark:bg-purple-900/10 rounded-lg border border-purple-100 dark:border-purple-800/20">
+                          <span className="text-purple-500 mt-0.5">💡</span>
                           <span>
-                        AI will generate a complete solution based on your prompt, replacing the current code in the editor.
+                            AI will generate a complete solution based on your prompt, replacing the current code in the editor.
                           </span>
                         </div>
                         
@@ -2029,21 +1992,40 @@ ${code}`
                             Cancel
                           </button>
                           <motion.button
-                            onClick={handleGenerateCode}
-                        className="px-6 py-2 rounded-lg bg-purple-500 text-white hover:bg-purple-600 transition-colors flex items-center gap-2 text-sm disabled:bg-purple-300 dark:disabled:bg-purple-900/30"
+                            onClick={() => {
+                              if (generationMode === 'generate') {
+                                handleGenerateCode();
+                              } else {
+                                handleExplainCode();
+                              }
+                            }}
+                        className={`px-6 py-2 rounded-lg text-white transition-colors flex items-center gap-2 text-sm ${
+                          generationMode === 'generate'
+                            ? 'bg-purple-500 hover:bg-purple-600 disabled:bg-purple-300 dark:disabled:bg-purple-900/30'
+                            : 'bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 dark:disabled:bg-blue-900/30'
+                        }`}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            disabled={!codePrompt.trim() || isGeneratingCode}
+                            disabled={isGeneratingCode || (generationMode === 'generate' && !codePrompt.trim())}
                           >
                             {isGeneratingCode ? (
                               <>
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                <span>Generating...</span>
+                                <span>{generationMode === 'generate' ? 'Generating...' : 'Analyzing...'}</span>
                               </>
                             ) : (
                               <>
-                                <Sparkles className="w-4 h-4" />
-                                <span>Generate & Replace</span>
+                                {generationMode === 'generate' ? (
+                                  <>
+                                    <Sparkles className="w-4 h-4" />
+                                    <span>Generate & Replace</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Code2 className="w-4 h-4" />
+                                    <span>Analyze & Explain</span>
+                                  </>
+                                )}
                               </>
                             )}
                           </motion.button>
@@ -2053,19 +2035,15 @@ ${code}`
                       // Explain code UI
                       <>
                         <div className="space-y-4">
-                      <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-lg border border-blue-100 dark:border-blue-800/20">
-                        <h4 className="font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
-                          <Terminal className="w-4 h-4 text-blue-500" />
-                          Code Analysis
-                            </h4>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          AI will analyze your code and provide an in-depth explanation of its functionality, structure, and potential improvements.
-                            </p>
+                          <div className="text-sm text-slate-600 dark:text-slate-400">
+                            The AI will analyze your code and provide a detailed explanation of how it works.
                           </div>
-                          
-                      <p className="text-sm text-slate-600 dark:text-slate-400 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
-                        Perfect for understanding complex code, learning new concepts, or improving your programming skills.
-                          </p>
+                          <div className="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-800/20">
+                            <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Current Code</h3>
+                            <pre className="text-xs overflow-x-auto whitespace-pre-wrap text-slate-700 dark:text-slate-300 font-mono">
+                              <code>{code}</code>
+                            </pre>
+                          </div>
                         </div>
                         
                         <div className="mt-6 flex justify-end gap-3">
@@ -2077,32 +2055,53 @@ ${code}`
                             Cancel
                           </button>
                           <motion.button
-                            onClick={handleExplainCode}
-                        className="px-6 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-2 text-sm disabled:bg-blue-300 dark:disabled:bg-blue-900/30"
+                            onClick={() => {
+                              if (generationMode === 'generate') {
+                                handleGenerateCode();
+                              } else {
+                                handleExplainCode();
+                              }
+                            }}
+                        className={`px-6 py-2 rounded-lg text-white transition-colors flex items-center gap-2 text-sm ${
+                          generationMode === 'generate'
+                            ? 'bg-purple-500 hover:bg-purple-600 disabled:bg-purple-300 dark:disabled:bg-purple-900/30'
+                            : 'bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 dark:disabled:bg-blue-900/30'
+                        }`}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            disabled={isGeneratingCode}
+                            disabled={isGeneratingCode || (generationMode === 'generate' && !codePrompt.trim())}
                           >
                             {isGeneratingCode ? (
                               <>
                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                <span>Analyzing...</span>
+                                <span>{generationMode === 'generate' ? 'Generating...' : 'Analyzing...'}</span>
                               </>
                             ) : (
                               <>
-                                <Code2 className="w-4 h-4" />
-                                <span>Analyze & Explain</span>
+                                {generationMode === 'generate' ? (
+                                  <>
+                                    <Sparkles className="w-4 h-4" />
+                                    <span>Generate & Replace</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Code2 className="w-4 h-4" />
+                                    <span>Analyze & Explain</span>
+                                  </>
+                                )}
                               </>
                             )}
                           </motion.button>
                         </div>
                       </>
                     )}
-                  </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
           {/* Refactoring Options Modal */}
           <AnimatePresence>
@@ -2224,8 +2223,8 @@ ${code}`
                 >
               <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-red-500" />
-                      Complexity Analysis
+                      <Timer className="w-5 h-5 text-blue-500" />
+                      Time Complexity Analysis
                     </h2>
                     <button
                       onClick={() => setIsTimeComplexityModalOpen(false)}
@@ -2243,48 +2242,44 @@ ${code}`
                       <div className="absolute inset-0 rounded-full border-3 border-blue-500 border-t-transparent animate-spin" />
                     </div>
                     <p className="mt-4 text-slate-600 dark:text-slate-400">Analyzing code complexity...</p>
+                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-500">This may take a moment for complex code</p>
                       </div>
-                    ) : complexityAnalysis ? (
-                  <div className="space-y-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-lg border border-blue-100 dark:border-blue-800/20">
-                        <h3 className="text-base font-semibold mb-2 text-blue-800 dark:text-blue-300">Time Complexity</h3>
-                            <p className="text-2xl font-mono font-bold text-blue-600 dark:text-blue-400">{complexityAnalysis.time}</p>
-                          </div>
-                      <div className="bg-purple-50 dark:bg-purple-900/10 p-4 rounded-lg border border-purple-100 dark:border-purple-800/20">
-                        <h3 className="text-base font-semibold mb-2 text-purple-800 dark:text-purple-300">Space Complexity</h3>
-                            <p className="text-2xl font-mono font-bold text-purple-600 dark:text-purple-400">{complexityAnalysis.space}</p>
-                          </div>
-                        </div>
-                        
-                        <div>
-                      <h3 className="text-base font-semibold mb-2 text-slate-800 dark:text-slate-200">Explanation</h3>
-                      <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                        <p className="whitespace-pre-wrap text-sm">{complexityAnalysis.explanation}</p>
-                          </div>
-                        </div>
+                    ) : complexityAnalysis && complexityAnalysis.time && complexityAnalysis.space && complexityAnalysis.explanation ? (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30">
+                        <h3 className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">Time Complexity</h3>
+                        <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{complexityAnalysis.time}</p>
                       </div>
-                    ) : (
-                  <div className="text-center py-8 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <p className="text-slate-600 dark:text-slate-400">
-                          No analysis available. Try with a different code snippet.
-                        </p>
+                      <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800/30">
+                        <h3 className="text-sm font-medium text-purple-700 dark:text-purple-300 mb-1">Space Complexity</h3>
+                        <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{complexityAnalysis.space}</p>
                       </div>
-                    )}
+                    </div>
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+                      <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Explanation</h3>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{complexityAnalysis.explanation}</p>
+                    </div>
                   </div>
-                  
-              <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/50 dark:bg-slate-800/50">
-                    <button
-                      onClick={() => setIsTimeComplexityModalOpen(false)}
-                  className="px-4 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 transition-colors text-sm"
-                    >
-                      Close
-                    </button>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-slate-600 dark:text-slate-400">No complexity analysis available</p>
                   </div>
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                )}
+              </div>
+              
+              <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+                <button
+                  onClick={() => setIsTimeComplexityModalOpen(false)}
+                  className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors text-sm"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
           {/* Editor Area with improved shadows and borders */}
           <div className="flex-1 relative overflow-hidden border-t lg:border-t-0 border-slate-200 dark:border-slate-800 flex flex-col">
